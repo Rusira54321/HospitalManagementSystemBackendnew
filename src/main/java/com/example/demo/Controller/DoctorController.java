@@ -1,12 +1,7 @@
 package com.example.demo.Controller;
 
-import com.example.demo.model.Appointment;
-import com.example.demo.model.Doctor;
-import com.example.demo.model.Hospital;
-import com.example.demo.model.Status;
-import com.example.demo.repository.AppoinmentRepository;
-import com.example.demo.repository.DoctorRepository;
-import com.example.demo.repository.HospitalRepository;
+import com.example.demo.model.*;
+import com.example.demo.repository.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +10,7 @@ import javax.print.Doc;
 import java.lang.annotation.Documented;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/doctor")
@@ -22,10 +18,15 @@ public class DoctorController
 {
     private final AppoinmentRepository appoinmentRepository;
     private final DoctorRepository doctorRepository;
-    public DoctorController(AppoinmentRepository appoinmentRepository,DoctorRepository doctorRepository)
+    private final MedicalRecordsRepository medicalRecordsRepository;
+    private final PatientRepository patientRepository;
+    public DoctorController(AppoinmentRepository appoinmentRepository, DoctorRepository doctorRepository
+    , MedicalRecordsRepository medicalRecordsRepository,PatientRepository patientRepository)
     {
         this.appoinmentRepository = appoinmentRepository;
         this.doctorRepository = doctorRepository;
+        this.medicalRecordsRepository = medicalRecordsRepository;
+        this.patientRepository = patientRepository;
     }
 
     @GetMapping("/getHospital")
@@ -155,6 +156,107 @@ public class DoctorController
             return ResponseEntity.ok("Mark as completed");
         }catch (Exception e)
         {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/AddMedicalRecords")
+    public ResponseEntity<?> addMedicalRecords(@RequestParam String patientID,
+                                               @RequestBody MedicalRecords record)
+    {
+        if(patientID==null || record==null)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Required fields are missing");
+        }
+        try {
+            Optional<Patient> existPatient = patientRepository.findById(Long.parseLong(patientID));
+            if (existPatient.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The patient is not found");
+            }
+            Patient existPatientObject = existPatient.get();
+            MedicalRecords existMedicalRecords = existPatientObject.getMedicalRecords();
+            if (existMedicalRecords != null) {
+                existPatientObject.setMedicalRecords(null);
+                patientRepository.save(existPatientObject);
+            }
+            existPatientObject.setMedicalRecords(record);
+            patientRepository.save(existPatientObject);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Successfully added medical record");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/getPatients")
+    public ResponseEntity<?> getPatientById(@RequestParam String patientId)
+    {
+        try {
+            Optional<Patient> matchedPatient = patientRepository.findById(Long.parseLong(patientId));
+            if (matchedPatient.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Patient is not found");
+            }
+            Patient patientObject = matchedPatient.get();
+            return ResponseEntity.ok(patientObject);
+        } catch (Exception e) {
+            return  ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/getMedicalRecords")
+    public  ResponseEntity<?> getMedicalRecords(@RequestParam String patientId)
+    {
+        if(patientId==null)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("All fields are required");
+        }
+        try {
+            Optional<Patient> matchedPatient = patientRepository.findById(Long.parseLong(patientId));
+            if (matchedPatient.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The patient is not found");
+            }
+            Patient matchedPatientObject = matchedPatient.get();
+            MedicalRecords medicalRecords = matchedPatientObject.getMedicalRecords();
+            return ResponseEntity.ok(medicalRecords);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/getBookedCompletedAppointments")
+    public ResponseEntity<?> getBookedCompletedAppointments(@RequestParam String patientID)
+    {
+        if(patientID==null)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("All fields are required");
+        }
+        try{
+            Optional<Patient> matchedPatient = patientRepository.findById(Long.parseLong(patientID));
+            if(matchedPatient.isEmpty())
+            {
+                return  ResponseEntity.status(HttpStatus.NOT_FOUND).body("The patient is not found");
+            }
+            Patient patientObject = matchedPatient.get();
+            List<Appointment> appointments = appoinmentRepository.findByPatient(patientObject);
+            List<Appointment> bookedAppointments = new ArrayList<>();
+            List<Appointment> completedAppointments = new ArrayList<>();
+            for(Appointment appointment:appointments)
+            {
+                if(appointment.getStatus()==Status.COMPLETED)
+                {
+                    completedAppointments.add(appointment);
+                }
+                else if(appointment.getStatus()==Status.BOOKED)
+                {
+                    bookedAppointments.add(appointment);
+                }
+            }
+            List<Appointment> sortedCompletedlist = completedAppointments.stream().sorted((a1,a2)->a2.getCompleteTime().compareTo(a1.getCompleteTime()))
+                    .collect(Collectors.toList());
+            Map<String,Object> response = new HashMap<>();
+            response.put("bookedAppointments",bookedAppointments);
+            response.put("completedAppointments",sortedCompletedlist);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }

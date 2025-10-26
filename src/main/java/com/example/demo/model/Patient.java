@@ -31,7 +31,7 @@ public class Patient extends User {
     @Column
     private String PhoneNumber;
 
-    @OneToOne(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.EAGER,cascade = CascadeType.ALL,orphanRemoval = true)
     @JoinColumn(name = "medicalrecords_id")
     private MedicalRecords medicalRecords;
 

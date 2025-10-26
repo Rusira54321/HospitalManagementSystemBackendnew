@@ -2,6 +2,8 @@ package com.example.demo.model;
 
 import jakarta.persistence.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "medicalrecords")
 public class MedicalRecords {
@@ -10,59 +12,51 @@ public class MedicalRecords {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long recordID;
 
-    @Column
-    private String allergies;
+    @ElementCollection
+    @CollectionTable(
+            name = "medicalrecord_allergies",
+            joinColumns = @JoinColumn(name = "record_id")
+    )
+    @Column(name = "allergy")
+    private List<String> allergies;
 
-    @Column
-    private String medication;
-
-    @Column
-    private String visitHistory;
-
+    @ElementCollection
+    @CollectionTable(
+            name = "medicalrecord_medications",
+            joinColumns = @JoinColumn(name = "record_id")
+    )
+    @Column(name = "medication")
+    private List<String> medications;
 
     public MedicalRecords()
     {}
 
-    public MedicalRecords(String allergies,String medication,String visitHistory)
+    public MedicalRecords(List<String> allergies,List<String> medications)
     {
         this.allergies = allergies;
-        this.medication = medication;
-        this.visitHistory = visitHistory;
+        this.medications = medications;
     }
 
-
-    public void setAllergies(String allergies)
-    {
+    public void setAllergies(List<String> allergies) {
         this.allergies = allergies;
     }
 
-    public void setMedication(String medication)
-    {
-        this.medication = medication;
+    public void setMedications(List<String> medications) {
+        this.medications = medications;
     }
 
-    public void setVisitHistory(String visitHistory)
+    public List<String> getAllergies()
     {
-        this.visitHistory = visitHistory;
+        return allergies;
+    }
+
+    public List<String> getMedications()
+    {
+        return medications;
     }
 
     public Long getRecordID()
     {
-        return recordID;
-    }
-
-    public String getAllergies()
-    {
-        return  allergies;
-    }
-
-    public String getMedication()
-    {
-        return  medication;
-    }
-
-    public String getVisitHistory()
-    {
-        return visitHistory;
+        return  recordID;
     }
 }

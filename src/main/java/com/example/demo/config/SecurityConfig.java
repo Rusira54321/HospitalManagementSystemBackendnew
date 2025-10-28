@@ -47,6 +47,7 @@ public class SecurityConfig
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/doctor/**").hasRole("DOCTOR")
                         .requestMatchers("/api/patient/**").hasRole("PATIENT")
+                        .requestMatchers("/api/HospitalStaff/**").hasRole("HOSPITALSTAFF")
                         .requestMatchers("/login").denyAll()
                         .anyRequest().authenticated() //Other endpoints require login
                 )

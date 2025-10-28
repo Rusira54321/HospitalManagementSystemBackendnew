@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.print.Doc;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -334,6 +335,7 @@ public class PatientController {
         }
     }
 
+
     @GetMapping("/GetCompletedAppointments")
     public ResponseEntity<?> getCompletedAppointmentsByPatientID(@RequestParam String patientID)
     {
@@ -370,6 +372,35 @@ public class PatientController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return  ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/getAvailableAppointments")
+    public ResponseEntity<?> getAvailableAppointments(@RequestParam String doctorId)
+    {
+        if(doctorId==null)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The doctorId is missing in the request");
+        }
+        try {
+            Long doctorID = Long.parseLong(doctorId);
+            Optional<Doctor> matchedDoctor = doctorRepository.findById(doctorID);
+            if (matchedDoctor.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The doctor is not found");
+            }
+            Doctor doctor = matchedDoctor.get();
+            List<Appointment> doctorAppointments = appoinmentRepository.findByDoctor(doctor);
+            List<Appointment> availableAppointments = new ArrayList<>();
+            for (Appointment appointment : doctorAppointments) {
+                if (appointment.getStatus() != Status.BOOKED &&
+                        appointment.getStatus() != Status.COMPLETED &&
+                        appointment.getStatus() != Status.CANCEL) {
+                    availableAppointments.add(appointment);
+                }
+            }
+            return ResponseEntity.ok(availableAppointments);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server error");
         }
     }
 }

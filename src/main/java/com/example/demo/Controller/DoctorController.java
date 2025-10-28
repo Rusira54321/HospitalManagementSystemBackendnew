@@ -17,16 +17,21 @@ import java.util.stream.Collectors;
 public class DoctorController
 {
     private final AppoinmentRepository appoinmentRepository;
+    private final HospitalRepository hospitalRepository;
     private final DoctorRepository doctorRepository;
+    private final HospitalStaffRepository hospitalStaffRepository;
     private final MedicalRecordsRepository medicalRecordsRepository;
     private final PatientRepository patientRepository;
     public DoctorController(AppoinmentRepository appoinmentRepository, DoctorRepository doctorRepository
-    , MedicalRecordsRepository medicalRecordsRepository,PatientRepository patientRepository)
+    , MedicalRecordsRepository medicalRecordsRepository,PatientRepository patientRepository,
+                            HospitalStaffRepository hospitalStaffRepository,HospitalRepository hospitalRepository)
     {
         this.appoinmentRepository = appoinmentRepository;
         this.doctorRepository = doctorRepository;
         this.medicalRecordsRepository = medicalRecordsRepository;
         this.patientRepository = patientRepository;
+        this.hospitalStaffRepository = hospitalStaffRepository;
+        this.hospitalRepository = hospitalRepository;
     }
 
     @GetMapping("/getHospital")
@@ -259,5 +264,64 @@ public class DoctorController
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
+    }
+    @GetMapping("/getSecretaries")
+    public ResponseEntity<?> getSecretaries(@RequestParam String doctorUserName)
+    {
+        if(doctorUserName==null)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The doctor user name is " +
+                    "not in the request");
+        }
+        try {
+            Optional<Doctor> doctor = doctorRepository.findByUsername(doctorUserName);
+            if (doctor.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The Doctor is not found");
+            }
+            Doctor doctorObject = doctor.get();
+            Hospital hospital = hospitalRepository.findByDoctors(doctorObject);
+            if (hospital == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The Hospital is not found");
+            }
+            List<HospitalStaff> hospitalStaffs = hospitalStaffRepository.findByHospital(hospital);
+            List<HospitalStaff> secretaries = new ArrayList<>();
+            for (HospitalStaff hospitalStaff : hospitalStaffs) {
+                boolean isHospitalStaff = hospitalStaff.getRoles().stream().anyMatch(role -> "ROLE_HOSPITALSTAFF".equals(role.getName()));
+                if (isHospitalStaff) {
+                    secretaries.add(hospitalStaff);
+                }
+            }
+            return ResponseEntity.ok(secretaries);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server error");
+        }
+    }
+
+    @GetMapping("/addSecretary")
+    public ResponseEntity<?> addSecretaries(@RequestParam String DoctorUserName
+            ,@RequestParam String secretaryId)
+    {
+            if(DoctorUserName==null || secretaryId ==null)
+            {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("DoctorUsername or secretaryId is missing in the" +
+                        "request");
+            }
+            try {
+                Optional<Doctor> doctor = doctorRepository.findByUsername(DoctorUserName);
+                if (doctor.isEmpty()) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The doctor is not found");
+                }
+                Doctor doctorObject = doctor.get();
+                Optional<HospitalStaff> hospitalStaff = hospitalStaffRepository.findById(Long.parseLong(secretaryId));
+                if (hospitalStaff.isEmpty()) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The Hospital Staff is not found");
+                }
+                HospitalStaff hospitalStaffObject = hospitalStaff.get();
+                doctorObject.setHospitalStaff(hospitalStaffObject);
+                doctorRepository.save(doctorObject);
+                return ResponseEntity.ok("Successfully add the Secretary");
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error");
+            }
     }
 }

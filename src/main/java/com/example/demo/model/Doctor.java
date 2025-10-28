@@ -30,6 +30,10 @@ public class Doctor extends  User {
     @JsonBackReference
     private Hospital hospital;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "secretary_id",nullable = true)
+    private HospitalStaff hospitalStaff;
+
     public Doctor()
     {
     
@@ -41,7 +45,8 @@ public class Doctor extends  User {
         this.lastName = lastName;
         this.specialization = specialization;
     }
-
+    public void setHospitalStaff(HospitalStaff hospitalStaff) {this.hospitalStaff = hospitalStaff;}
+    public HospitalStaff getHospitalStaff(){return hospitalStaff;}
     public void setHospital(Hospital hospital)
     {
         this.hospital = hospital;

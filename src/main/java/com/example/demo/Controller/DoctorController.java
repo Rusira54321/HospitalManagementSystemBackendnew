@@ -2,6 +2,7 @@ package com.example.demo.Controller;
 
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
+import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -54,7 +55,9 @@ public class DoctorController
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
+
     @PostMapping("/addAppointment")
+    @Transactional
     public ResponseEntity<?> AddAppointments(@RequestBody Appointment appointment)
     {
         try {
@@ -68,6 +71,7 @@ public class DoctorController
             if (endtime == null || startTime == null || status == null) {
                 return ResponseEntity.badRequest().body("ALL Fields are required");
             }
+            doctorRepository.findByIdWithLock(doctor.getId());
             List<Appointment> appointments = appoinmentRepository.findByDoctor(doctor);
             LocalDateTime newStart = appointment.getStartTime();
             LocalDateTime newEnd = appointment.getEndTime();
@@ -323,5 +327,26 @@ public class DoctorController
             } catch (Exception e) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error");
             }
+    }
+
+    @GetMapping("/getSecretary")
+    public ResponseEntity<?> getDoctorsSecretary(@RequestParam String doctorUserName)
+    {
+        if(doctorUserName.isEmpty())
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("DoctorUserName is " +
+                    "missing in the request");
+        }
+        try {
+            Optional<Doctor> doctor = doctorRepository.findByUsername(doctorUserName);
+            if (doctor.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The doctor is not found");
+            }
+            Doctor doctorObject = doctor.get();
+            HospitalStaff secretary = doctorObject.getHospitalStaff();
+            return ResponseEntity.ok(secretary);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error");
+        }
     }
 }

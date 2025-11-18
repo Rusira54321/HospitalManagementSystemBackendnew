@@ -42,6 +42,7 @@ public class SecurityConfig
                         .requestMatchers("/api/auth/register/patient").permitAll()
                         .requestMatchers("/api/auth/createHospital").hasRole("ADMIN")
                         .requestMatchers("/api/patient/payment/webhook").permitAll()
+                        .requestMatchers("/api/admin/getAllHospitals").hasAnyRole("ADMIN","HEALTHCAREMANAGER")
                         .requestMatchers("/api/auth/getHospitals").hasAnyRole("ADMIN","PATIENT")
                         .requestMatchers("/api/doctor/addAppointment").hasAnyRole("DOCTOR","HOSPITALSTAFF")
                         .requestMatchers("/api/doctor/getAppointments").hasAnyRole("DOCTOR","PATIENT")
@@ -49,6 +50,7 @@ public class SecurityConfig
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/doctor/**").hasRole("DOCTOR")
                         .requestMatchers("/api/patient/**").hasRole("PATIENT")
+                        .requestMatchers("/api/HealthCareManager/**").hasRole("HEALTHCAREMANAGER")
                         .requestMatchers("/api/HospitalStaff/**").hasRole("HOSPITALSTAFF")
                         .requestMatchers("/login").denyAll()
                         .anyRequest().authenticated() //Other endpoints require login

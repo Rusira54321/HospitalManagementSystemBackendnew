@@ -16,6 +16,7 @@ import com.stripe.model.EventDataObjectDeserializer;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import com.stripe.param.checkout.SessionCreateParams;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -96,7 +97,9 @@ public class PatientController {
         }
     }
 
+
     @GetMapping("/bookAppointment")
+    @Transactional
     public ResponseEntity<?> BookingAppointment(@RequestParam String appointmentID,@RequestParam String patientID)
     {
         try {

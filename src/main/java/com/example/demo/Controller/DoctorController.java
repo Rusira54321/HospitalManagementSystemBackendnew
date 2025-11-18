@@ -146,7 +146,9 @@ public class DoctorController
         }
     }
 
+
     @GetMapping("/markAsCompleted")
+    @Transactional
     public ResponseEntity<?> markAsCompleted(@RequestParam String appointmentId)
     {
         if(appointmentId==null)

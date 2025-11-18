@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.print.Doc;
 import java.util.*;
-
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {

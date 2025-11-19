@@ -6,6 +6,7 @@ import com.example.demo.repository.AppoinmentRepository;
 import com.example.demo.repository.DoctorRepository;
 import com.example.demo.repository.HospitalRepository;
 import com.example.demo.repository.PatientRepository;
+import com.example.demo.services.GetPatientMedicalRecords;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -38,11 +39,15 @@ class PatientControllerTest {
     @Mock
     private List<INotificationService> notificationServices;
 
+    @Mock
+    private GetPatientMedicalRecords getPatientMedicalRecords;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         notificationServices = new ArrayList<>();
-        patientController = new PatientController(doctorRepository, appoinmentRepository, patientRepository, hospitalRepository, notificationServices);
+        patientController = new PatientController(doctorRepository, appoinmentRepository, patientRepository, hospitalRepository, notificationServices,
+                getPatientMedicalRecords);
     }
 
     @Test

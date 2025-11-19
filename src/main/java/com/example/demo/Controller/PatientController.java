@@ -6,6 +6,7 @@ import com.example.demo.repository.AppoinmentRepository;
 import com.example.demo.repository.DoctorRepository;
 import com.example.demo.repository.HospitalRepository;
 import com.example.demo.repository.PatientRepository;
+import com.example.demo.services.GetPatientMedicalRecords;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.Stripe;
@@ -39,6 +40,7 @@ public class PatientController {
     private String frontendUrl;
     @Value("${stripe.webhook.secret}")
     private String endpointSecret;
+    private final GetPatientMedicalRecords getPatientMedicalRecords;
     private final DoctorRepository doctorRepository;
     private final AppoinmentRepository appoinmentRepository;
     private final PatientRepository patientRepository;
@@ -46,14 +48,18 @@ public class PatientController {
     private final List<INotificationService> notoficationServices;
     public PatientController(DoctorRepository doctorRepository,AppoinmentRepository appoinmentRepository,
                              PatientRepository patientRepository,HospitalRepository hospitalRepository,
-                             List<INotificationService> notificationServices)
+                             List<INotificationService> notificationServices,
+                             GetPatientMedicalRecords getPatientMedicalRecords
+                             )
     {
+        this.getPatientMedicalRecords = getPatientMedicalRecords;
         this.appoinmentRepository = appoinmentRepository;
         this.patientRepository = patientRepository;
         this.doctorRepository = doctorRepository;
         this.hospitalRepository = hospitalRepository;
         this.notoficationServices = notificationServices;
     }
+
 
     @GetMapping("/getDoctors")
     public ResponseEntity<?> getDoctors()
@@ -405,5 +411,20 @@ public class PatientController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server error");
         }
+    }
+
+    @GetMapping("/getMedicalRecords")
+    public ResponseEntity<?> getMedicalRecords(@RequestParam String patientUserName)
+    {
+        if(patientUserName==null || patientUserName.isEmpty())
+            {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The patientUserName is not in the request");
+            }
+        MedicalRecords medicalRecords = getPatientMedicalRecords.getMedicalRecords(patientUserName);
+        if(medicalRecords==null)
+        {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Medical records not found");
+        }
+        return ResponseEntity.ok(medicalRecords);
     }
 }

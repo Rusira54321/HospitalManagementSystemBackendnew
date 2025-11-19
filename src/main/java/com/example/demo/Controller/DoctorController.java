@@ -172,6 +172,7 @@ public class DoctorController
     }
 
     @PostMapping("/AddMedicalRecords")
+    @org.springframework.transaction.annotation.Transactional
     public ResponseEntity<?> addMedicalRecords(@RequestParam String patientID,
                                                @RequestBody MedicalRecords record)
     {
@@ -179,7 +180,6 @@ public class DoctorController
         {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Required fields are missing");
         }
-        try {
             Optional<Patient> existPatient = patientRepository.findById(Long.parseLong(patientID));
             if (existPatient.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The patient is not found");
@@ -193,9 +193,6 @@ public class DoctorController
             existPatientObject.setMedicalRecords(record);
             patientRepository.save(existPatientObject);
             return ResponseEntity.status(HttpStatus.CREATED).body("Successfully added medical record");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-        }
     }
 
     @GetMapping("/getPatients")

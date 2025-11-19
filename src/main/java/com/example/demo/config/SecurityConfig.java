@@ -45,7 +45,7 @@ public class SecurityConfig
                         .requestMatchers("/api/admin/getAllHospitals").hasAnyRole("ADMIN","HEALTHCAREMANAGER")
                         .requestMatchers("/api/auth/getHospitals").hasAnyRole("ADMIN","PATIENT")
                         .requestMatchers("/api/doctor/addAppointment").hasAnyRole("DOCTOR","HOSPITALSTAFF")
-                        .requestMatchers("/api/doctor/getAppointments").hasAnyRole("DOCTOR","PATIENT")
+                        .requestMatchers("/api/doctor/getAppointments").hasAnyRole("DOCTOR","PATIENT","HOSPITALSTAFF")
                         .requestMatchers("/api/doctor/getHospital").hasAnyRole("DOCTOR","HOSPITALSTAFF")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/doctor/**").hasRole("DOCTOR")

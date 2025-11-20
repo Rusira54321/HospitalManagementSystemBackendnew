@@ -2,6 +2,7 @@ package com.example.demo.Controller;
 
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
+import com.example.demo.services.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -17,10 +18,27 @@ public class AdminController {
     private final HospitalRepository hospitalRepository;
     private final HospitalStaffRepository hospitalStaffRepository;
     private final AppoinmentRepository appoinmentRepository;
+    private final getTotalPatients getTotalPatients;
+    private final GetTotalDoctors getTotalDoctors;
+    private final GetTotalAppointments getTotalAppointments;
+    private final GetTotalHospitalStaffCount getTotalHospitalStaffCount;
+    private final WeeklySpecializationService weeklySpecializationService;
+    private final GetAppointmentsWithMonth getAppointmentsWithMonth;
     AdminController(PatientRepository patientRepository, DoctorRepository doctorRepository
     , HospitalRepository hospitalRepository, HospitalStaffRepository hospitalStaffRepository,
-                    AppoinmentRepository appoinmentRepository)
+                    AppoinmentRepository appoinmentRepository,
+                    getTotalPatients getTotalPatients, GetTotalDoctors getTotalDoctors,
+                    GetTotalAppointments getTotalAppointments,
+                    GetTotalHospitalStaffCount getTotalHospitalStaffCount,
+                    WeeklySpecializationService weeklySpecializationService,
+                    GetAppointmentsWithMonth getAppointmentsWithMonth)
     {
+        this.getAppointmentsWithMonth = getAppointmentsWithMonth;
+        this.weeklySpecializationService = weeklySpecializationService;
+        this.getTotalHospitalStaffCount = getTotalHospitalStaffCount;
+        this.getTotalAppointments = getTotalAppointments;
+        this.getTotalDoctors = getTotalDoctors;
+        this.getTotalPatients = getTotalPatients;
         this.patientRepository = patientRepository;
         this.doctorRepository = doctorRepository;
         this.hospitalRepository = hospitalRepository;
@@ -220,6 +238,43 @@ public class AdminController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
+    }
+
+    @GetMapping("/getDashboardDetails")
+    public ResponseEntity<?> getDashboardDetails()
+    {
+        long numberOfPatients = getTotalPatients.getNumberOfPatients();
+        long numberOfDoctors = getTotalDoctors.getDoctorsCount();
+        long totalAppointmentsCount = getTotalAppointments.getTotalAppointmentsCount();
+        long totalBookedAppointmentsCount = getTotalAppointments.getTotalBookedAppointmentsCount();
+        long totalCompletedAppointmentsCount = getTotalAppointments.getTotalCompletedAppointmentsCount();
+        long totalAvailableAppointmentsCount = getTotalAppointments.getTotalAvailableAppointmentsCount();
+        long totalHospitalStaffCount = getTotalHospitalStaffCount.getTotalHospitalStaffCount();
+        long totalSecretaryCount = getTotalHospitalStaffCount.getTotalSecretaryCount();
+        long totalHealthCareManagerCount = getTotalHospitalStaffCount.getTotalHealthCareManagerCount();
+        Map<String,Long> response = new HashMap<>();
+        response.put("NoOfPatient",numberOfPatients);
+        response.put("NoOfDoctors",numberOfDoctors);
+        response.put("TotalAppointmentsCount",totalAppointmentsCount);
+        response.put("TotalBookedAppointments",totalBookedAppointmentsCount);
+        response.put("TotalCompletedAppointments",totalCompletedAppointmentsCount);
+        response.put("TotalAvailableAppointments",totalAvailableAppointmentsCount);
+        response.put("TotalHospitalStaffCount",totalHospitalStaffCount);
+        response.put("TotalSecretaryCount",totalSecretaryCount);
+        response.put("TotalHealthCareManagerCount",totalHealthCareManagerCount);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/getDepartmentVisePatients")
+    public ResponseEntity<?> getDepartmentVisePatients()
+    {
+            return ResponseEntity.ok(weeklySpecializationService.getThisWeekSpecializationTotals());
+    }
+
+    @GetMapping("/getAppointmentsWithMonth")
+    public ResponseEntity<?> getAppointmentsWithMonth()
+    {
+        return ResponseEntity.ok(getAppointmentsWithMonth.getNumberOfAppointmentsWithMonth());
     }
 
 }

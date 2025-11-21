@@ -33,12 +33,12 @@ public interface AppoinmentRepository extends JpaRepository<Appointment,Long> {
                 @Param("end") LocalDateTime end
         );
 
-        @Query(value="SELECT MONTH(start_time) AS month, COUNT(*) AS total " +
+        @Query(value="SELECT MONTH(start_time) AS month_number,MONTHNAME(start_time) AS month_name, COUNT(*) AS total " +
                 "FROM appointments " +
                 "WHERE status IN ('BOOKED', 'COMPLETED') " +
                 "AND YEAR(start_time) = YEAR(CURDATE()) " +
-                "GROUP BY MONTH(start_time) " +
-                "ORDER BY MONTH(start_time)",
+                "GROUP BY month_number, month_name " +
+                "ORDER BY month_number",
                 nativeQuery = true)
         List<Object[]> getCurrentYearAppointmentsByMonth();
 

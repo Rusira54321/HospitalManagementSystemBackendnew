@@ -1,5 +1,6 @@
 package com.example.demo.services;
 
+import com.example.demo.dto.AppointmentWithMonthDTO;
 import com.example.demo.repository.AppoinmentRepository;
 import org.springframework.stereotype.Service;
 
@@ -17,15 +18,16 @@ public class GetAppointmentsWithMonth
     {
         this.appoinmentRepository = appoinmentRepository;
     }
-    public Map<String,Long> getNumberOfAppointmentsWithMonth()
+    public List<AppointmentWithMonthDTO> getNumberOfAppointmentsWithMonth()
     {
         int currentYear = Year.now().getValue();
         List<Object[]> numberOfAppointmentsWithMonth = appoinmentRepository.getCurrentYearAppointmentsByMonth();
-        Map<String,Long> AppointmentsByMonth = new HashMap<>();
+        List<AppointmentWithMonthDTO> NumberOfappointments = new ArrayList<>();
         for(Object[] appointment:numberOfAppointmentsWithMonth)
         {
-            AppointmentsByMonth.put((String)appointment[0],(Long) appointment[1]);
+            AppointmentWithMonthDTO newObject = new AppointmentWithMonthDTO((String)appointment[1],(Long)appointment[2]);
+            NumberOfappointments.add(newObject);
         }
-        return AppointmentsByMonth;
+        return NumberOfappointments;
     }
 }
